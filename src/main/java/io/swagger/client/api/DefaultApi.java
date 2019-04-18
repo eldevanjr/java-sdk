@@ -75,7 +75,7 @@ public class DefaultApi {
 
 
     /**
-     * @param callback: The callback URL. Must be the applications redirect URI
+     * @param redirectUri: The callback URL. Must be the applications redirect URI
      * @param authUrl:  The authorization URL. Get from Meli.AuthUrls
      * @return the authorization URL
      */

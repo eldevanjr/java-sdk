@@ -17,13 +17,19 @@ import io.swagger.client.ApiClient;
 import io.swagger.client.ApiException;
 import io.swagger.client.Configuration;
 import io.swagger.client.model.*;
+import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 import static org.junit.Assert.*;
 
@@ -37,11 +43,32 @@ public class DefaultApiTest {
      * To run tests replace all the corresponding null values for valid values
      **/
 
-    private final Long clientId = null;
-    private final String clientSecret = null;
-    private final String redirectUri = null;
+
+
+    private static Long CLIENT_ID ;
+    private static String CLIENT_SECRET;
+    private static String REDIRECT_URI;
     private final String accessToken = null;
     private final DefaultApi api = new DefaultApi();
+
+    @BeforeClass
+    public static void loadConfigValues(){
+        //change to your config file
+        String configFile = System.getProperty("user.home") + "/.JKawFlex.properties";
+        try (InputStream input = new FileInputStream(configFile)) {
+            Properties prop = new Properties();
+            prop.load(input);
+            CLIENT_ID = Long.valueOf(prop.getProperty("ml.client.id", "0"));
+            System.out.println("ml.client.id=" + prop.getProperty("ml.client.id"));
+            CLIENT_SECRET = prop.getProperty("ml.client.secret");
+            System.out.println("ml.client.secret=" + prop.getProperty("ml.client.secret"));
+            REDIRECT_URI = prop.getProperty("ml.redirect.uri");
+            System.out.println("ml.redirect.uri=" + prop.getProperty("ml.redirect.uri"));
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+
+    }
 
 
     /**
@@ -49,17 +76,17 @@ public class DefaultApiTest {
      */
     @Test
     public void getAuthUrlTest() throws ApiException {
-        DefaultApi api = new DefaultApi(new ApiClient(), clientId, clientSecret);
-        String response = api.getAuthUrl(redirectUri, Configuration.AuthUrls.MLA);
+        DefaultApi api = new DefaultApi(new ApiClient(), CLIENT_ID, CLIENT_SECRET);
+        String response = api.getAuthUrl(REDIRECT_URI, Configuration.AuthUrls.MLA);
         StringBuilder sb = new StringBuilder();
         sb.append(Configuration.AuthUrls.MLA.getValue());
         sb.append("/authorization?response_type=code&client_id=");
-        sb.append(clientId);
+        sb.append(CLIENT_ID);
         sb.append("&redirect_uri=");
         try {
-            sb.append(URLEncoder.encode(redirectUri, "UTF-8"));
+            sb.append(URLEncoder.encode(REDIRECT_URI, "UTF-8"));
         } catch (UnsupportedEncodingException e) {
-            sb.append(redirectUri);
+            sb.append(REDIRECT_URI);
         }
         assertNotNull(response);
         assertEquals(sb.toString(), response);
@@ -68,12 +95,12 @@ public class DefaultApiTest {
     @Test(expected = ApiException.class)
     public void getAuthUrlTestFailsIfRedirectUriIsNull() throws ApiException {
         String redirectUri = null;
-        DefaultApi api = new DefaultApi(new ApiClient(), clientId, clientSecret);
+        DefaultApi api = new DefaultApi(new ApiClient(), CLIENT_ID, CLIENT_SECRET);
         api.getAuthUrl(redirectUri, Configuration.AuthUrls.MLA);
         StringBuilder sb = new StringBuilder();
         sb.append(Configuration.AuthUrls.MLA.getValue());
         sb.append("/authorization?response_type=code&client_id=");
-        sb.append(clientId);
+        sb.append(CLIENT_ID);
         sb.append("&redirect_uri=");
         try {
             sb.append(URLEncoder.encode(redirectUri, "UTF-8"));
@@ -89,9 +116,9 @@ public class DefaultApiTest {
      */
     @Test
     public void authorizeTest() throws ApiException {
-        DefaultApi api = new DefaultApi(new ApiClient(), clientId, clientSecret);
+        DefaultApi api = new DefaultApi(new ApiClient(), CLIENT_ID, CLIENT_SECRET);
         String code = "";
-        AccessToken response = api.authorize(code, redirectUri);
+        AccessToken response = api.authorize(code, REDIRECT_URI);
         assertNotNull(response);
         assertNotNull(response.getAccess_token());
         assertEquals("bearer", response.getToken_type());
@@ -99,16 +126,16 @@ public class DefaultApiTest {
 
     @Test(expected = ApiException.class)
     public void authorizeTestFailsIfCodeIsNull() throws ApiException {
-        DefaultApi api = new DefaultApi(new ApiClient(), clientId, clientSecret);
+        DefaultApi api = new DefaultApi(new ApiClient(), CLIENT_ID, CLIENT_SECRET);
         String code = null;
-        api.authorize(code, redirectUri);
+        api.authorize(code, REDIRECT_URI);
     }
 
     @Test(expected = ApiException.class)
     public void authorizeTestFailsIfCodeIsInvalid() throws ApiException {
-        DefaultApi api = new DefaultApi(new ApiClient(), clientId, clientSecret);
+        DefaultApi api = new DefaultApi(new ApiClient(), CLIENT_ID, CLIENT_SECRET);
         String code = "12321321";
-        api.authorize(code, redirectUri);
+        api.authorize(code, REDIRECT_URI);
     }
 
     /**
@@ -118,7 +145,7 @@ public class DefaultApiTest {
      */
     @Test
     public void refreshTokenTest() throws ApiException {
-        DefaultApi api = new DefaultApi(new ApiClient(), clientId, clientSecret);
+        DefaultApi api = new DefaultApi(new ApiClient(), CLIENT_ID, CLIENT_SECRET);
         String refreshToken = "";
         RefreshToken response = api.refreshAccessToken(refreshToken);
         assertNotNull(response);
@@ -128,7 +155,7 @@ public class DefaultApiTest {
 
     @Test(expected = ApiException.class)
     public void refreshTokenTestFailsIfRefreshTokenIsInvalid() throws ApiException {
-        DefaultApi api = new DefaultApi(new ApiClient(), clientId, clientSecret);
+        DefaultApi api = new DefaultApi(new ApiClient(), CLIENT_ID, CLIENT_SECRET);
         String refreshToken = "1232131";
         api.refreshAccessToken(refreshToken);
     }
@@ -142,6 +169,7 @@ public class DefaultApiTest {
     public void defaultGetTest() throws ApiException {
         String resource = "currencies";
         Object response = api.defaultGet(resource);
+        System.out.println(response);
         assertNotNull(response);
     }
 
